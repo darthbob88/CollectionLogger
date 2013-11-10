@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace LogCollections
@@ -15,39 +14,74 @@ namespace LogCollections
         private static void Main()
         {
 
-            ParseMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
-
-            Console.ReadLine();
+            var libraryList = ParseMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
+            DumpMusicCollection(libraryList);
+            ParseAndDumpPorn(@"C:\Users\darth_000\Videos");
+            //Console.ReadLine();
 
         }
 
-        private static void ParseMusicCollection(params string[] directories)
+        private static void ParseAndDumpPorn(string cUsersDarthVideos)
         {
-            StreamWriter musicLog = File.CreateText(Target + "/music.txt");
-            Dictionary<string, List<string>> libraryList = new Dictionary<string, List<string>>();
-            foreach (string libraryDir in directories)
+            if (!Directory.Exists(cUsersDarthVideos)) return;
+            var movies = Directory.GetFiles(cUsersDarthVideos, "*.*", SearchOption.AllDirectories);
+            using (var pornLog = File.CreateText(Target + "/movies.txt"))
             {
-                if (!Directory.Exists(libraryDir)) continue;
-
-                var artistList = Directory.EnumerateDirectories(libraryDir);
-                foreach (var artistDir in artistList)
+                foreach (var movie in movies)
                 {
-                    string artist = artistDir.Substring(artistDir.LastIndexOf('\\') + 1);
-                    if (libraryList.ContainsKey(artist)) continue;
+                    pornLog.WriteLine(movie.Replace(cUsersDarthVideos+"\\", ""));
+                }
+            }
+        }
 
-                    var albumList = Directory.EnumerateDirectories(artistDir);
-                    foreach (var albumDir in albumList)
+        private static void DumpMusicCollection(Dictionary<string, Dictionary<string, HashSet<string>>> libraryList)
+        {
+            using (var musicLog = File.CreateText(Target + "/music.txt"))
+            {
+                foreach (var artist in libraryList)
+                {
+                    foreach (var album in artist.Value)
                     {
-                        string[] songList = Directory.GetFiles(albumDir, "*.mp3");
-                        if (songList.Length <= 1) continue;
-                        string album = albumDir.Substring(albumDir.LastIndexOf('\\') + 1);
-                        //Console.WriteLine(artist + " - " + album);
-                        libraryList[artist].Add(album);
+                        musicLog.WriteLine(artist.Key + " - " + album.Key);
+
+                        //We probably have the full album.
+                        if (album.Value.Count >= 4) continue;
+                        foreach (var song in album.Value)
+                        {
+                            musicLog.WriteLine("\t" + song);
+
+                        }
                     }
+                    musicLog.WriteLine();
 
                 }
             }
+        }
 
+        private static Dictionary<string, Dictionary<string, HashSet<string>>> ParseMusicCollection(params string[] directories)
+        {
+
+            var libraryList = new Dictionary<string, Dictionary<string, HashSet<string>>>();
+            foreach (var libraryDir in directories)
+            {
+                if (!Directory.Exists(libraryDir)) continue;
+
+                var songList = Directory.EnumerateFiles(libraryDir, "*.mp3", SearchOption.AllDirectories);
+                foreach (var song in songList)
+                {
+                    var data = song.Replace(libraryDir, "").Split('\\');
+                    var artistName = data[1];
+                    var albumName = data[2];
+                    var songName = data[3];
+                    if (!libraryList.ContainsKey(artistName))
+                        libraryList.Add(artistName, new Dictionary<string, HashSet<string>>());
+                    if (!libraryList[artistName].ContainsKey(albumName))
+                        libraryList[artistName].Add(albumName, new HashSet<string>());
+                    if (libraryList[artistName][albumName].Contains(songName)) continue;
+                    libraryList[artistName][albumName].Add(songName);
+                }
+            }
+            return libraryList;
         }
     }
 }
