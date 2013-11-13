@@ -29,10 +29,10 @@ namespace LogCollections
                     if (!Directory.Exists(directory)) continue;
                     var individualFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-                    var seasons = individualFiles.GroupBy(episode => episode.Remove(episode.LastIndexOf("\\")));
+                    var seasons = individualFiles.GroupBy(episode => episode.Remove(episode.LastIndexOf("\\"))).Select(y => y.Key);
                     foreach (var season in seasons)
                     {
-                        tvLog.WriteLine(season.Key.Replace(directory + "\\", ""));
+                        tvLog.WriteLine(season.Replace(directory + "\\", ""));
                     }
                     tvLog.WriteLine("\n");
                     foreach (var movie in individualFiles)
