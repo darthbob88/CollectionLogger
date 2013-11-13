@@ -1,14 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace LogCollections
 {
     internal class Program
     {
-        /* TODO: Parse through the directory structure to get a list of all directories
-         * which contain songs, and throw those into a list of Artist-Album-Song groupings.
-         * Do the same with the porn as well. Possibly also what's on the terabyte.
-         */
+
         const string Target = @"C:\Users\darth_000\SkyDrive\Documents";
 
         private static void Main()
@@ -17,8 +15,32 @@ namespace LogCollections
             var libraryList = ParseMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
             DumpMusicCollection(libraryList);
             ParseAndDumpPorn(@"C:\Users\darth_000\Videos");
+            ParseAndDumpTV(@"F:\TV Shows");
             //Console.ReadLine();
 
+        }
+
+        private static void ParseAndDumpTV(params string[] tvShows)
+        {
+            using (var tvLog = File.CreateText(Target + "/TV.txt"))
+            {
+                foreach (var directory in tvShows)
+                {
+                    if (!Directory.Exists(directory)) continue;
+                    var individualFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+
+                    var seasons = individualFiles.GroupBy(episode => episode.Remove(episode.LastIndexOf("\\")));
+                    foreach (var season in seasons)
+                    {
+                        tvLog.WriteLine(season.Key.Replace(directory + "\\", ""));
+                    }
+                    tvLog.WriteLine("\n");
+                    foreach (var movie in individualFiles)
+                    {
+                        tvLog.WriteLine(movie.Replace(directory + "\\", ""));
+                    }
+                }
+            }
         }
 
         private static void ParseAndDumpPorn(string cUsersDarthVideos)
@@ -29,7 +51,7 @@ namespace LogCollections
             {
                 foreach (var movie in movies)
                 {
-                    pornLog.WriteLine(movie.Replace(cUsersDarthVideos+"\\", ""));
+                    pornLog.WriteLine(movie.Replace(cUsersDarthVideos + "\\", ""));
                 }
             }
         }
