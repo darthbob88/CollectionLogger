@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -6,16 +7,14 @@ namespace LogCollections
 {
     internal class Program
     {
-
-        const string Target = @"C:\Users\darth_000\SkyDrive\Documents";
+        private const string Target = @"C:\Users\darth_000\SkyDrive\Documents";
 
         private static void Main()
         {
 
-            var libraryList = ParseMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
-            DumpMusicCollection(libraryList);
+            ParseAndDumpMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
             ParseAndDumpPorn(@"C:\Users\darth_000\Videos");
-            ParseAndDumpTV(@"F:\TV Shows");
+            ParseAndDumpTV(@"F:\TV Shows", @"C:\Users\Public\Videos");
             //Console.ReadLine();
 
         }
@@ -24,20 +23,24 @@ namespace LogCollections
         {
             using (var tvLog = File.CreateText(Target + "/TV.txt"))
             {
-                foreach (var directory in tvShows)
-                {
-                    if (!Directory.Exists(directory)) continue;
-                    var individualFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
 
-                    var seasons = individualFiles.GroupBy(episode => episode.Remove(episode.LastIndexOf("\\"))).Select(y => y.Key);
-                    foreach (var season in seasons)
+                var seasons = tvShows.Where(Directory.Exists)
+                                     .Select(
+                                         directory =>
+                                         Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                                         .GroupBy(episode =>
+                                                      episode.Remove(episode.LastIndexOf("\\"))
+                                                             .Replace(directory + "\\", "")))
+                                     .SelectMany(seasonList => seasonList);
+                foreach (var season in seasons)
+                {
+                    tvLog.WriteLine(season.Key);
+                    if (season.Count() < 4)
                     {
-                        tvLog.WriteLine(season.Replace(directory + "\\", ""));
-                    }
-                    tvLog.WriteLine("\n");
-                    foreach (var movie in individualFiles)
-                    {
-                        tvLog.WriteLine(movie.Replace(directory + "\\", ""));
+                        foreach (var episode in season)
+                        {
+                            tvLog.WriteLine("\t" + episode);
+                        }
                     }
                 }
             }
@@ -46,7 +49,8 @@ namespace LogCollections
         private static void ParseAndDumpPorn(string cUsersDarthVideos)
         {
             if (!Directory.Exists(cUsersDarthVideos)) return;
-            var movies = Directory.GetFiles(cUsersDarthVideos, "*.*", SearchOption.AllDirectories);
+            IEnumerable<string> movies = Directory.GetFiles(cUsersDarthVideos, "*.*", SearchOption.AllDirectories);
+            movies = from file in movies where (!file.EndsWith(".db")) select file;
             using (var pornLog = File.CreateText(Target + "/movies.txt"))
             {
                 foreach (var movie in movies)
@@ -56,54 +60,31 @@ namespace LogCollections
             }
         }
 
-        private static void DumpMusicCollection(Dictionary<string, Dictionary<string, HashSet<string>>> libraryList)
+
+        private static void ParseAndDumpMusicCollection(params string[] directories)
         {
             using (var musicLog = File.CreateText(Target + "/music.txt"))
             {
-                foreach (var artist in libraryList)
+                foreach (var album in
+                    directories.Where(Directory.Exists)
+                               .Select(
+                                   libraryDir =>
+                                   Directory.EnumerateFiles(libraryDir, "*.mp3", SearchOption.AllDirectories)
+                                            .GroupBy(
+                                                song =>
+                                                song.Remove(song.LastIndexOf("\\")).Replace(libraryDir + "\\", "")))
+                               .SelectMany(albumList => albumList))
                 {
-                    foreach (var album in artist.Value)
+                    musicLog.WriteLine(album.Key);
+                    if (album.Count() < 4)
                     {
-                        musicLog.WriteLine(artist.Key + " - " + album.Key);
-
-                        //We probably have the full album.
-                        if (album.Value.Count >= 4) continue;
-                        foreach (var song in album.Value)
+                        foreach (var song in album)
                         {
                             musicLog.WriteLine("\t" + song);
-
                         }
                     }
-                    musicLog.WriteLine();
-
                 }
             }
-        }
-
-        private static Dictionary<string, Dictionary<string, HashSet<string>>> ParseMusicCollection(params string[] directories)
-        {
-
-            var libraryList = new Dictionary<string, Dictionary<string, HashSet<string>>>();
-            foreach (var libraryDir in directories)
-            {
-                if (!Directory.Exists(libraryDir)) continue;
-
-                var songList = Directory.EnumerateFiles(libraryDir, "*.mp3", SearchOption.AllDirectories);
-                foreach (var song in songList)
-                {
-                    var data = song.Replace(libraryDir, "").Split('\\');
-                    var artistName = data[1];
-                    var albumName = data[2];
-                    var songName = data[3];
-                    if (!libraryList.ContainsKey(artistName))
-                        libraryList.Add(artistName, new Dictionary<string, HashSet<string>>());
-                    if (!libraryList[artistName].ContainsKey(albumName))
-                        libraryList[artistName].Add(albumName, new HashSet<string>());
-                    if (libraryList[artistName][albumName].Contains(songName)) continue;
-                    libraryList[artistName][albumName].Add(songName);
-                }
-            }
-            return libraryList;
         }
     }
 }
