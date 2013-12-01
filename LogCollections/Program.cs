@@ -28,6 +28,7 @@ namespace LogCollections
                                      .Select(
                                          directory =>
                                          Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                                         .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt")))
                                          .GroupBy(episode =>
                                                       episode.Remove(episode.LastIndexOf("\\"))
                                                              .Replace(directory + "\\", "")))
@@ -49,8 +50,7 @@ namespace LogCollections
         private static void ParseAndDumpPorn(string cUsersDarthVideos)
         {
             if (!Directory.Exists(cUsersDarthVideos)) return;
-            IEnumerable<string> movies = Directory.GetFiles(cUsersDarthVideos, "*.*", SearchOption.AllDirectories);
-            movies = from file in movies where (!file.EndsWith(".db")) select file;
+            IEnumerable<string> movies = Directory.GetFiles(cUsersDarthVideos, "*.*", SearchOption.AllDirectories).Where(file => (!file.EndsWith(".db")));
             using (var pornLog = File.CreateText(Target + "/movies.txt"))
             {
                 foreach (var movie in movies)
