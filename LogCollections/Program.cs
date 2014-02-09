@@ -13,7 +13,7 @@ namespace LogCollections
         {
 
             ParseAndDumpMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
-            ParseAndDumpPorn(@"C:\Users\darth_000\Videos");
+            ParseAndDumpPorn(@"C:\Users\darth_000\Videos", @"F:\Videos");
             ParseAndDumpTV(@"F:\TV Shows", @"C:\Users\Public\Videos");
             //Console.ReadLine();
 
@@ -23,15 +23,15 @@ namespace LogCollections
         {
             using (var tvLog = File.CreateText(Target + "/TV.txt"))
             {
-
                 var seasons = tvShows.Where(Directory.Exists)
                                      .Select(
                                          directory =>
                                          Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
                                          .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt")))
-                                         .GroupBy(episode =>
-                                                      episode.Remove(episode.LastIndexOf("\\"))
-                                                             .Replace(directory + "\\", "")))
+                                      .Select(episode => episode.Replace(directory + "\\", ""))
+                                      .GroupBy(episode =>
+                                                      episode.Remove(Math.Max(0, episode.LastIndexOf("\\")))
+                                      ))
                                      .SelectMany(seasonList => seasonList);
                 foreach (var season in seasons)
                 {
@@ -47,15 +47,21 @@ namespace LogCollections
             }
         }
 
-        private static void ParseAndDumpPorn(string cUsersDarthVideos)
+        private static void ParseAndDumpPorn(params string[] pornStash)
         {
-            if (!Directory.Exists(cUsersDarthVideos)) return;
-            IEnumerable<string> movies = Directory.GetFiles(cUsersDarthVideos, "*.*", SearchOption.AllDirectories).Where(file => (!file.EndsWith(".db")));
             using (var pornLog = File.CreateText(Target + "/movies.txt"))
             {
+
+                var movies = pornStash.Where(Directory.Exists)
+                                         .Select(
+                                             directory =>
+                                             Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                                             .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt")))
+                                             .Select(episode => episode.Replace(directory + "\\", "")))
+                                             .SelectMany(video => video);
                 foreach (var movie in movies)
                 {
-                    pornLog.WriteLine(movie.Replace(cUsersDarthVideos + "\\", ""));
+                    pornLog.WriteLine(movie);
                 }
             }
         }
@@ -70,9 +76,9 @@ namespace LogCollections
                                .Select(
                                    libraryDir =>
                                    Directory.EnumerateFiles(libraryDir, "*.mp3", SearchOption.AllDirectories)
-                                            .GroupBy(
-                                                song =>
-                                                song.Remove(song.LastIndexOf("\\")).Replace(libraryDir + "\\", "")))
+                                            .Select(song => song.Replace(libraryDir + "\\", ""))
+                                      .GroupBy(song => song.Remove(Math.Max(0, song.LastIndexOf("\\")))
+                                      ))
                                .SelectMany(albumList => albumList))
                 {
                     musicLog.WriteLine(album.Key);
