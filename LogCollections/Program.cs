@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace LogCollections
 {
@@ -14,36 +15,36 @@ namespace LogCollections
 
             ParseAndDumpMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
             ParseAndDumpPorn(@"C:\Users\darth_000\Videos", @"F:\Videos");
-            ParseAndDumpTV(@"F:\TV Shows", @"C:\Users\Public\Videos");
+            ParseAndDumpTV(@"F:\TV Shows");
             //Console.ReadLine();
 
         }
 
         private static void ParseAndDumpTV(params string[] tvShows)
         {
-            using (var tvLog = File.CreateText(Target + "/TV.txt"))
+            using (var tvLog = File.CreateText(Target + "/TV.xml"))
             {
                 var seasons = tvShows.Where(Directory.Exists)
                                      .Select(
                                          directory =>
                                          Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
-                                         .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt")))
+                                         .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt")))
                                       .Select(episode => episode.Replace(directory + "\\", ""))
                                       .GroupBy(episode =>
                                                       episode.Remove(Math.Max(0, episode.LastIndexOf("\\")))
                                       ))
                                      .SelectMany(seasonList => seasonList);
+                XElement TVTree = new XElement("TVCollection");
                 foreach (var season in seasons)
                 {
-                    tvLog.WriteLine(season.Key);
-                    if (season.Count() < 4)
+                    XElement seasonNode = new XElement("season", new XAttribute("name", season.Key));
+                    foreach (var episode in season)
                     {
-                        foreach (var episode in season)
-                        {
-                            tvLog.WriteLine("\t" + episode);
-                        }
+                        seasonNode.Add(new XElement("episode", episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
                     }
+                    TVTree.Add(seasonNode);
                 }
+                tvLog.Write(TVTree);
             }
         }
 
