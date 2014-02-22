@@ -67,11 +67,11 @@ namespace LogCollections
             }
         }
 
-
         private static void ParseAndDumpMusicCollection(params string[] directories)
         {
-            using (var musicLog = File.CreateText(Target + "/music.txt"))
+            using (var musicLog = File.CreateText(Target + "/music.xml"))
             {
+                XElement MusicTree = new XElement("MusicCollection");
                 foreach (var album in
                     directories.Where(Directory.Exists)
                                .Select(
@@ -82,15 +82,14 @@ namespace LogCollections
                                       ))
                                .SelectMany(albumList => albumList))
                 {
-                    musicLog.WriteLine(album.Key);
-                    if (album.Count() < 4)
+                    XElement seasonNode = new XElement("album", new XAttribute("name", album.Key));
+                    foreach (var song in album)
                     {
-                        foreach (var song in album)
-                        {
-                            musicLog.WriteLine("\t" + song);
-                        }
+                        seasonNode.Add(new XElement("song", song.Substring(1 + Math.Max(0, song.LastIndexOf("\\")))));
                     }
+                    MusicTree.Add(seasonNode);
                 }
+                musicLog.Write(MusicTree);
             }
         }
     }
