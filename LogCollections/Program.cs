@@ -8,7 +8,7 @@ namespace LogCollections
 {
     internal class Program
     {
-        private const string Target = @"C:\Users\darth_000\SkyDrive\Documents";
+        private const string TARGET = @"C:\Users\darth_000\SkyDrive\Documents";
 
         private static void Main()
         {
@@ -16,13 +16,37 @@ namespace LogCollections
             ParseAndDumpMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
             ParseAndDumpPorn(@"C:\Users\darth_000\Videos", @"F:\Videos");
             ParseAndDumpTV(@"F:\TV Shows");
+            ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
             //Console.ReadLine();
 
         }
 
+        private static void ParseAndDumpComics(string logFile, params string[] libraries)
+        {
+            using (var comicsLog = File.CreateText(TARGET + logFile))
+            {
+                var seriesList = libraries.Where(Directory.Exists).
+                    Select(library => Directory.GetFiles(library, "*.*", SearchOption.AllDirectories)
+                        .Where(comic => !(comic.EndsWith(".db") || comic.EndsWith(".txt") || comic.EndsWith(".srt"))).Select(comic => comic.Replace(library + "\\", ""))
+                        .GroupBy(comic => comic.Remove(Math.Max(0, comic.LastIndexOf("\\"))))).SelectMany(series => series);
+                XElement ComicTree = new XElement("ComicCollection");
+              foreach (var series in seriesList)
+                    { XElement seriesNode = new XElement("series", new XAttribute("name", series.Key));
+                    foreach (var comic in series)
+                    {
+                  
+
+                        seriesNode.Add(new XElement("comic", comic.Substring(1 + Math.Max(0, comic.LastIndexOf("\\")))));
+                    }
+                    ComicTree.Add(seriesNode);
+                }
+                comicsLog.Write(ComicTree);
+            }
+        }
+
         private static void ParseAndDumpTV(params string[] tvShows)
         {
-            using (var tvLog = File.CreateText(Target + "/TV.xml"))
+            using (var tvLog = File.CreateText(TARGET + "/TV.xml"))
             {
                 var seasons = tvShows.Where(Directory.Exists)
                                      .Select(
@@ -50,7 +74,7 @@ namespace LogCollections
 
         private static void ParseAndDumpPorn(params string[] pornStash)
         {
-            using (var pornLog = File.CreateText(Target + "/movies.txt"))
+            using (var pornLog = File.CreateText(TARGET + "/movies.txt"))
             {
 
                 var movies = pornStash.Where(Directory.Exists)
@@ -69,7 +93,7 @@ namespace LogCollections
 
         private static void ParseAndDumpMusicCollection(params string[] directories)
         {
-            using (var musicLog = File.CreateText(Target + "/music.xml"))
+            using (var musicLog = File.CreateText(TARGET + "/music.xml"))
             {
                 XElement MusicTree = new XElement("MusicCollection");
                 foreach (var album in
