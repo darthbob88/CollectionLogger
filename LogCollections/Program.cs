@@ -12,13 +12,11 @@ namespace LogCollections
 
         private static void Main()
         {
-
             ParseAndDumpMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
             ParseAndDumpPorn(@"C:\Users\darth_000\Videos", @"F:\Videos");
             ParseAndDumpTV(@"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
             //Console.ReadLine();
-
         }
 
         private static void ParseAndDumpComics(string logFile, params string[] libraries)
@@ -30,12 +28,11 @@ namespace LogCollections
                         .Where(comic => !(comic.EndsWith(".db") || comic.EndsWith(".txt") || comic.EndsWith(".srt"))).Select(comic => comic.Replace(library + "\\", ""))
                         .GroupBy(comic => comic.Remove(Math.Max(0, comic.LastIndexOf("\\"))))).SelectMany(series => series);
                 XElement ComicTree = new XElement("ComicCollection");
-              foreach (var series in seriesList)
-                    { XElement seriesNode = new XElement("series", new XAttribute("name", series.Key));
+                foreach (var series in seriesList)
+                {
+                    XElement seriesNode = new XElement("series", new XAttribute("name", series.Key));
                     foreach (var comic in series)
                     {
-                  
-
                         seriesNode.Add(new XElement("comic", comic.Substring(1 + Math.Max(0, comic.LastIndexOf("\\")))));
                     }
                     ComicTree.Add(seriesNode);
