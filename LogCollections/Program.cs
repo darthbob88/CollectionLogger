@@ -2,115 +2,125 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace LogCollections
 {
     internal class Program
     {
-        private const string TARGET = @"C:\Users\darth_000\SkyDrive\Documents";
+        static private string[] TARGETS = new String[] { @"C:\Users\darth_000\SkyDrive\Documents", @"C:\Users\darth_000\Dropbox\Public", @"C:\Users\darth_000\Google Drive" };
 
         private static void Main()
         {
-            ParseAndDumpMusicCollection(@"C:\Users\darth_000\Music", @"F:\Music");
-            ParseAndDumpPorn(@"C:\Users\darth_000\Videos", @"F:\Videos");
-            ParseAndDumpTV(@"F:\TV Shows");
+            ParseAndDumpMusicCollection(@"/music.xml", @"C:\Users\darth_000\Music", @"F:\Music");
+            ParseAndDumpPorn(@"/business_material.xml", @"C:\Users\darth_000\Videos", @"F:\Videos");
+            ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
             //Console.ReadLine();
         }
 
-        private static void ParseAndDumpComics(string logFile, params string[] libraries)
+        private async static void ParseAndDumpComics(string logFile, params string[] libraries)
         {
-            using (var comicsLog = File.CreateText(TARGET + logFile))
+            if (0 > libraries.Where(Directory.Exists).Count())
+                return;
+
+            var seriesList = PullCollection(libraries);
+            XElement ComicTree = new XElement("ComicCollection");
+            foreach (var series in seriesList)
             {
-                var seriesList = libraries.Where(Directory.Exists).
-                    Select(library => Directory.GetFiles(library, "*.*", SearchOption.AllDirectories)
-                        .Where(comic => !(comic.EndsWith(".db") || comic.EndsWith(".txt") || comic.EndsWith(".srt"))).Select(comic => comic.Replace(library + "\\", ""))
-                        .GroupBy(comic => comic.Remove(Math.Max(0, comic.LastIndexOf("\\"))))).SelectMany(series => series);
-                XElement ComicTree = new XElement("ComicCollection");
-                foreach (var series in seriesList)
+                XElement seriesNode = new XElement("series", new XAttribute("name", series.Key));
+                foreach (var comic in series)
                 {
-                    XElement seriesNode = new XElement("series", new XAttribute("name", series.Key));
-                    foreach (var comic in series)
-                    {
-                        seriesNode.Add(new XElement("comic", comic.Substring(1 + Math.Max(0, comic.LastIndexOf("\\")))));
-                    }
-                    ComicTree.Add(seriesNode);
+                    seriesNode.Add(new XElement("comic", comic.Substring(1 + Math.Max(0, comic.LastIndexOf("\\")))));
                 }
-                comicsLog.Write(ComicTree);
+                ComicTree.Add(seriesNode);
             }
+            await WriteFilesAsync(ComicTree, logFile);
         }
 
-        private static void ParseAndDumpTV(params string[] tvShows)
+        private async static void ParseAndDumpTV(string logFile, params string[] tvShows)
         {
-            using (var tvLog = File.CreateText(TARGET + "/TV.xml"))
+            if (0 > tvShows.Where(Directory.Exists).Count())
+                return;
+
+            var seasons = PullCollection(tvShows);
+            XElement TVTree = new XElement("TVCollection");
+            foreach (var season in seasons)
             {
-                var seasons = tvShows.Where(Directory.Exists)
-                                     .Select(
-                                         directory =>
-                                         Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
-                                         .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt")))
-                                      .Select(episode => episode.Replace(directory + "\\", ""))
-                                      .GroupBy(episode =>
-                                                      episode.Remove(Math.Max(0, episode.LastIndexOf("\\")))
-                                      ))
-                                     .SelectMany(seasonList => seasonList);
-                XElement TVTree = new XElement("TVCollection");
-                foreach (var season in seasons)
+                XElement seasonNode = new XElement("season", new XAttribute("name", season.Key));
+                foreach (var episode in season)
                 {
-                    XElement seasonNode = new XElement("season", new XAttribute("name", season.Key));
-                    foreach (var episode in season)
-                    {
-                        seasonNode.Add(new XElement("episode", episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
-                    }
-                    TVTree.Add(seasonNode);
+                    seasonNode.Add(new XElement("episode", episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
                 }
-                tvLog.Write(TVTree);
+                TVTree.Add(seasonNode);
             }
+            await WriteFilesAsync(TVTree, logFile);
         }
 
-        private static void ParseAndDumpPorn(params string[] pornStash)
+        async private static void ParseAndDumpPorn(string logFile, params string[] pornStash)
         {
-            using (var pornLog = File.CreateText(TARGET + "/movies.txt"))
-            {
+            if (0 > pornStash.Where(Directory.Exists).Count())
+                return;
 
-                var movies = pornStash.Where(Directory.Exists)
-                                         .Select(
-                                             directory =>
-                                             Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
-                                             .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt")))
-                                             .Select(episode => episode.Replace(directory + "\\", "")))
-                                             .SelectMany(video => video);
-                foreach (var movie in movies)
+            var movies = PullCollection(pornStash);
+            XElement MediaTree = new XElement("filecabinet");
+            foreach (var category in movies)
+            {
+                XElement fileNode = new XElement("category", new XAttribute("name", category.Key));
+                foreach (var episode in category)
                 {
-                    pornLog.WriteLine(movie);
+                    fileNode.Add(new XElement("movie", episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
                 }
+                MediaTree.Add(fileNode);
             }
+            await WriteFilesAsync(MediaTree, logFile);
         }
 
-        private static void ParseAndDumpMusicCollection(params string[] directories)
+        async private static void ParseAndDumpMusicCollection(string logFile, params string[] directories)
         {
-            using (var musicLog = File.CreateText(TARGET + "/music.xml"))
+            if (0 > directories.Where(Directory.Exists).Count())
+                return;
+            XElement MusicTree = new XElement("MusicCollection");
+            foreach (var album in PullCollection(directories))
             {
-                XElement MusicTree = new XElement("MusicCollection");
-                foreach (var album in
-                    directories.Where(Directory.Exists)
-                               .Select(
-                                   libraryDir =>
-                                   Directory.EnumerateFiles(libraryDir, "*.mp3", SearchOption.AllDirectories)
-                                            .Select(song => song.Replace(libraryDir + "\\", ""))
-                                      .GroupBy(song => song.Remove(Math.Max(0, song.LastIndexOf("\\")))
-                                      ))
-                               .SelectMany(albumList => albumList))
+                XElement seasonNode = new XElement("album", new XAttribute("name", album.Key));
+                foreach (var song in album)
                 {
-                    XElement seasonNode = new XElement("album", new XAttribute("name", album.Key));
-                    foreach (var song in album)
+                    if (song.EndsWith(".mp3"))
                     {
                         seasonNode.Add(new XElement("song", song.Substring(1 + Math.Max(0, song.LastIndexOf("\\")))));
                     }
+                }
+                if (!seasonNode.IsEmpty)
+                {
                     MusicTree.Add(seasonNode);
                 }
-                musicLog.Write(MusicTree);
+            }
+            await WriteFilesAsync(MusicTree, logFile);
+        }
+
+        private static IEnumerable<IGrouping<string, string>> PullCollection(params string[] collections)
+        {
+            return collections.Where(Directory.Exists).Select(
+                                       directory =>
+                                       Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                                       .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini")))
+                                    .Select(episode => episode.Replace(directory + "\\", ""))
+                                    .GroupBy(episode => episode.Remove(Math.Max(0, episode.LastIndexOf("\\")))))
+                                    .SelectMany(seasonList => seasonList);
+        }
+        public async static Task WriteFilesAsync(XElement data, string file)
+        {
+            var tasks = TARGETS.Select(f => WriteAsync(data, f + file));
+            await Task.WhenAll(tasks);
+        }
+
+        private static async Task WriteAsync(XElement data, string path)
+        {
+            using (var fs = new StreamWriter(path))
+            {
+                await fs.WriteAsync(data.ToString());
             }
         }
     }
