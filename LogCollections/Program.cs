@@ -9,7 +9,9 @@ namespace LogCollections
 {
     internal class Program
     {
-        static private string[] TARGETS = new String[] { @"C:\Users\darth_000\SkyDrive\Documents", @"C:\Users\darth_000\Dropbox\Public", @"C:\Users\darth_000\Google Drive" };
+        static private string[] TARGETS = new String[] { @"C:\Users\darth_000\OneDrive\Documents",
+            @"C:\Users\darth_000\Dropbox\Public",
+            @"C:\Users\darth_000\Google Drive" };
 
         private static void Main()
         {
@@ -70,7 +72,7 @@ namespace LogCollections
                 XElement fileNode = new XElement("category", new XAttribute("name", category.Key));
                 foreach (var episode in category)
                 {
-                    fileNode.Add(new XElement("movie", episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
+                    fileNode.Add(new XElement("movie", episode.Substring(Math.Max(0, 1 + episode.LastIndexOf("\\")))));
                 }
                 MediaTree.Add(fileNode);
             }
@@ -106,13 +108,12 @@ namespace LogCollections
                                        directory =>
                                        Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
                                        .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini")))
-                                    .Select(episode => episode.Replace(directory + "\\", ""))
-                                    .GroupBy(episode => episode.Remove(Math.Max(0, episode.LastIndexOf("\\")))))
-                                    .SelectMany(seasonList => seasonList);
+                                    .Select(episode => episode.Replace(directory + "\\", ""))).SelectMany(seasonList => seasonList)
+                                    .Distinct().GroupBy(episode => episode.Remove(Math.Max(0, episode.LastIndexOf("\\"))));
         }
         public async static Task WriteFilesAsync(XElement data, string file)
         {
-            var tasks = TARGETS.Select(f => WriteAsync(data, f + file));
+            var tasks = TARGETS.Where(Directory.Exists).Select(f => WriteAsync(data, f + file));
             await Task.WhenAll(tasks);
         }
 
