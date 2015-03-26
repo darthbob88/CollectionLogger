@@ -9,9 +9,9 @@ namespace LogCollections
 {
     internal class Program
     {
-        static private string[] TARGETS = new String[] { @"C:\Users\darth_000\OneDrive\Documents",
-            @"C:\Users\darth_000\Dropbox\Public",
-            @"C:\Users\darth_000\Google Drive" };
+        static private string[] TARGETS = new String[] { @"C:\Users\Raymond\OneDrive\Documents",
+            @"C:\Users\Raymond\Dropbox\Public",
+            @"C:\Users\Raymond\Google Drive" };
 
         private static void Main()
         {
