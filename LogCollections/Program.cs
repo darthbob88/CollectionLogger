@@ -9,12 +9,14 @@ namespace LogCollections
 {
     internal class Program
     {
-        static private string[] TARGETS = new String[] { @"C:\Users\Raymond\OneDrive\Documents",
-            @"C:\Users\Raymond\Dropbox\Public",
-            @"C:\Users\Raymond\Google Drive" };
+        static private string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        static private string[] TARGETS = new String[] { profile + @"\OneDrive\Documents",
+            profile + @"\Dropbox\Public",
+            profile + @"\Google Drive" };
 
         private static void Main()
-        {
+        { 
+       
             ParseAndDumpMusicCollection(@"/music.xml", @"C:\Users\darth_000\Music", @"F:\Music");
             ParseAndDumpPorn(@"/business_material.xml", @"C:\Users\darth_000\Videos", @"F:\Videos");
             ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
