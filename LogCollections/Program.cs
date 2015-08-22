@@ -15,10 +15,9 @@ namespace LogCollections
             profile + @"\Google Drive" };
 
         private static void Main()
-        { 
-       
-            ParseAndDumpMusicCollection(@"/music.xml", @"C:\Users\darth_000\Music", @"F:\Music");
-            ParseAndDumpPorn(@"/business_material.xml", @"C:\Users\darth_000\Videos", @"F:\Videos");
+        {
+            ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
+            ParseAndDumpPorn(@"/business_material.xml", profile + @"\Videos", @"F:\Videos");
             ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
             //Console.ReadLine();
