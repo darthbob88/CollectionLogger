@@ -15,8 +15,7 @@ namespace LogCollections
             profile + @"\Dropbox\Public",
             profile + @"\Google Drive" };
 
-        static private SQLiteConnection dbConnection = new SQLiteConnection(profile + @"\OneDrive\Documents\media.sqlite");
-
+        private static SQLiteConnection dbConnection;
         /// <summary>
         /// Logs and dumps my media collections to a single file, so that if
         /// everything else is destroyed I can still rebuild them from these logs.
@@ -25,11 +24,32 @@ namespace LogCollections
         /// </summary>
         private static void Main()
         {
+            using (dbConnection = new SQLiteConnection("Data Source=" + profile + @"\OneDrive\Documents\media.sqlite; foreign keys=true"))
+            {
+                dbConnection.Open();
+                var movieList = Directory.EnumerateFiles(@"D:\movies", "*.*", SearchOption.AllDirectories);
+                foreach (var movie in movieList)
+                {
+                    var dbcommandCommand = new SQLiteCommand("insert into movies (name) values (@movieName)",
+                        dbConnection);
+                    dbcommandCommand.Parameters.Add(new SQLiteParameter("@movieName",
+                        movie.Substring(1 + Math.Max(0, movie.LastIndexOf("\\")))));
+                    try
+                    {
+                        dbcommandCommand.ExecuteNonQuery();
+                    }
+                    catch (SQLiteException ex)
+                    { //TODO log ex.ErrorCode
+                    }
+                }
+                dbConnection.Close();
+            }
+
+
             ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
             ParseAndDumpPorn(@"/business_material.xml", profile + @"\Videos", @"F:\Videos");
             ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
-            //Console.ReadLine();
         }
 
         private async static void ParseAndDumpComics(string logFile, params string[] libraries)
