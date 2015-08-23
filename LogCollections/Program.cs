@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Data.SQLite;
 
 namespace LogCollections
 {
@@ -14,6 +15,14 @@ namespace LogCollections
             profile + @"\Dropbox\Public",
             profile + @"\Google Drive" };
 
+        static private SQLiteConnection dbConnection = new SQLiteConnection(profile + @"\OneDrive\Documents\media.sqlite");
+
+        /// <summary>
+        /// Logs and dumps my media collections to a single file, so that if
+        /// everything else is destroyed I can still rebuild them from these logs.
+        /// TODO Add other sources and other media, including ebooks, RSS feeds, non-porn movies, ETC.
+        /// TODO Move to SQLite database, both for learning and for scalability.
+        /// </summary>
         private static void Main()
         {
             ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
