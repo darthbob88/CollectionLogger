@@ -15,7 +15,8 @@ namespace LogCollections
             profile + @"\Dropbox\Public",
             profile + @"\Google Drive" };
 
-        private static SQLiteConnection dbConnection;
+        private static SQLiteConnection dbConnection =
+            new SQLiteConnection("Data Source=" + profile + @"\OneDrive\Documents\media.sqlite; foreign keys=true");
         /// <summary>
         /// Logs and dumps my media collections to a single file, so that if
         /// everything else is destroyed I can still rebuild them from these logs.
@@ -24,34 +25,40 @@ namespace LogCollections
         /// </summary>
         private static void Main()
         {
-            using (dbConnection = new SQLiteConnection("Data Source=" + profile + @"\OneDrive\Documents\media.sqlite; foreign keys=true"))
-            {
-                dbConnection.Open();
-                var movieList = Directory.EnumerateFiles(@"D:\movies", "*.*", SearchOption.AllDirectories);
-                foreach (var movie in movieList)
-                {
-                    var dbcommandCommand = new SQLiteCommand("insert into movies (name) values (@movieName)",
-                        dbConnection);
-                    dbcommandCommand.Parameters.Add(new SQLiteParameter("@movieName",
-                        movie.Substring(1 + Math.Max(0, movie.LastIndexOf("\\")))));
-                    try
-                    {
-                        dbcommandCommand.ExecuteNonQuery();
-                    }
-                    catch (SQLiteException ex)
-                    { //TODO log ex.ErrorCode
-                    }
-                }
-                dbConnection.Close();
-            }
-
-
+            ParseAndDumpMovies(@"/movies.xml", @"F:\Movies");
             ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
             ParseAndDumpPorn(@"/business_material.xml", profile + @"\Videos", @"F:\Videos");
             ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
         }
 
+        private async static void ParseAndDumpMovies(string logFile, params string[] libraries)
+        {
+            if (0 > libraries.Where(Directory.Exists).Count())
+                return;
+
+            //Only one folder full of movies, after all.
+            var movieList = PullCollection(libraries).First();
+            XElement MovieTree = new XElement("MovieCollection");
+            dbConnection.Open();
+            foreach (var movie in movieList)
+            {
+                var dbcommandCommand = new SQLiteCommand("insert or ignore into movies (name) values (@movieName)",
+                    dbConnection);
+                dbcommandCommand.Parameters.Add(new SQLiteParameter("@movieName", movie));
+                try
+                {
+                    dbcommandCommand.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                { //TODO log ex.ErrorCode
+                }
+                MovieTree.Add(new XElement("film", movie));
+            }
+            dbConnection.Close();
+
+            await WriteFilesAsync(MovieTree, logFile);
+        }
         private async static void ParseAndDumpComics(string logFile, params string[] libraries)
         {
             if (0 > libraries.Where(Directory.Exists).Count())
@@ -141,13 +148,13 @@ namespace LogCollections
                                     .Select(episode => episode.Replace(directory + "\\", ""))).SelectMany(seasonList => seasonList)
                                     .Distinct().GroupBy(episode => episode.Remove(Math.Max(0, episode.LastIndexOf("\\"))));
         }
-        public async static Task WriteFilesAsync(XElement data, string file)
+        public async static Task WriteFilesAsync(object data, string file)
         {
             var tasks = TARGETS.Where(Directory.Exists).Select(f => WriteAsync(data, f + file));
             await Task.WhenAll(tasks);
         }
 
-        private static async Task WriteAsync(XElement data, string path)
+        private static async Task WriteAsync(Object data, string path)
         {
             using (var fs = new StreamWriter(path))
             {
