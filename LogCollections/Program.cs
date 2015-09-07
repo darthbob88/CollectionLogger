@@ -85,8 +85,21 @@ namespace LogCollections
 
             var seasons = PullCollection(tvShows);
             XElement TVTree = new XElement("TVCollection");
+            dbConnection.Open();
+
             foreach (var season in seasons)
             {
+                var dbcommandCommand = new SQLiteCommand("insert or ignore into tv_shows (show_name) values (@showName)",
+                   dbConnection);
+                dbcommandCommand.Parameters.Add(new SQLiteParameter("@showName", season));
+                try
+                {
+                    dbcommandCommand.ExecuteNonQuery();
+                }
+                catch (SQLiteException ex)
+                { //TODO log ex.ErrorCode
+                }
+
                 XElement seasonNode = new XElement("season", new XAttribute("name", season.Key));
                 foreach (var episode in season)
                 {
@@ -104,16 +117,30 @@ namespace LogCollections
 
             var movies = PullCollection(pornStash);
             XElement MediaTree = new XElement("filecabinet");
+            dbConnection.Open();
             foreach (var category in movies)
             {
                 XElement fileNode = new XElement("category", new XAttribute("name", category.Key));
                 foreach (var episode in category)
                 {
                     fileNode.Add(new XElement("movie", episode.Substring(Math.Max(0, 1 + episode.LastIndexOf("\\")))));
+
+                    MediaTree.Add(fileNode);
+                    var dbcommandCommand = new SQLiteCommand("insert or ignore into porn (video_name) values (@movieName)",
+                        dbConnection);
+                    dbcommandCommand.Parameters.Add(new SQLiteParameter("@movieName", episode));
+                    try
+                    {
+                        dbcommandCommand.ExecuteNonQuery();
+                    }
+                    catch (SQLiteException ex)
+                    {
+                        //TODO log ex.ErrorCode
+                    }
                 }
-                MediaTree.Add(fileNode);
             }
             await WriteFilesAsync(MediaTree, logFile);
+            dbConnection.Close();
         }
 
         async private static void ParseAndDumpMusicCollection(string logFile, params string[] directories)
@@ -144,7 +171,8 @@ namespace LogCollections
             return collections.Where(Directory.Exists).Select(
                                        directory =>
                                        Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
-                                       .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini")))
+                                       .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini")
+                                           || episode.EndsWith(".nfo") || episode.EndsWith(".tbn") || episode.EndsWith(".jpg")))
                                     .Select(episode => episode.Replace(directory + "\\", ""))).SelectMany(seasonList => seasonList)
                                     .Distinct().GroupBy(episode => episode.Remove(Math.Max(0, episode.LastIndexOf("\\"))));
         }
