@@ -25,7 +25,7 @@ namespace LogCollections
         }
         private async static void ParseAndDumpMovies(string logFile, params string[] libraries)
         {
-            if (0 > libraries.Where(Directory.Exists).Count())
+            if (libraries.Where(Directory.Exists).Any())
                 return;
 
             //Only one folder full of movies, after all.
@@ -39,7 +39,7 @@ namespace LogCollections
         }
         private async static void ParseAndDumpComics(string logFile, params string[] libraries)
         {
-            if (0 > libraries.Where(Directory.Exists).Count())
+            if (libraries.Where(Directory.Exists).Any())
                 return;
 
             var seriesList = PullCollection(libraries);
@@ -58,7 +58,7 @@ namespace LogCollections
 
         private async static void ParseAndDumpTV(string logFile, params string[] tvShows)
         {
-            if (0 > tvShows.Where(Directory.Exists).Count())
+            if (tvShows.Where(Directory.Exists).Any())
                 return;
 
             var seasons = PullCollection(tvShows);
@@ -77,7 +77,7 @@ namespace LogCollections
 
         async private static void ParseAndDumpPorn(string logFile, params string[] pornStash)
         {
-            if (0 > pornStash.Where(Directory.Exists).Count())
+            if (pornStash.Where(Directory.Exists).Any())
                 return;
 
             var movies = PullCollection(pornStash);
@@ -96,7 +96,7 @@ namespace LogCollections
 
         async private static void ParseAndDumpMusicCollection(string logFile, params string[] directories)
         {
-            if (0 > directories.Where(Directory.Exists).Count())
+            if (directories.Where(Directory.Exists).Any())
                 return;
             XElement MusicTree = new XElement("MusicCollection");
             foreach (var album in PullCollection(directories))
