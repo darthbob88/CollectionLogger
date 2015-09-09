@@ -16,13 +16,27 @@ namespace LogCollections
 
         private static void Main()
         {
+            ParseAndDumpMovies(@"/movies.xml", @"F:\Movies");
             ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
             ParseAndDumpPorn(@"/business_material.xml", profile + @"\Videos", @"F:\Videos");
             ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
             //Console.ReadLine();
         }
+        private async static void ParseAndDumpMovies(string logFile, params string[] libraries)
+        {
+            if (0 > libraries.Where(Directory.Exists).Count())
+                return;
 
+            //Only one folder full of movies, after all.
+            var movieList = PullCollection(libraries).First();
+            XElement MovieTree = new XElement("MovieCollection");
+            foreach (var movie in movieList)
+            {
+                MovieTree.Add(new XElement("film", movie));
+            }
+            await WriteFilesAsync(MovieTree, logFile);
+        }
         private async static void ParseAndDumpComics(string logFile, params string[] libraries)
         {
             if (0 > libraries.Where(Directory.Exists).Count())
