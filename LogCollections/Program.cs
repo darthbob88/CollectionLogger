@@ -30,30 +30,49 @@ namespace LogCollections
 
             //Only one folder full of movies, after all.
             var movieList = PullCollection(libraries).First();
-            XElement MovieTree = new XElement("MovieCollection");
-            foreach (var movie in movieList)
+
+            using (var context = new mediaEntities())
             {
-                MovieTree.Add(new XElement("film", movie));
-            }
-            await WriteFilesAsync(MovieTree, logFile);
+                var MovieTree = new XElement("MovieCollection");
+
+                foreach (var movie in movieList)
+                {
+                    MovieTree.Add(new XElement("film", movie));
+                    if (!context.movies.Any(film => film.movie_name == movie))
+                        context.movies.Add(new movies { movie_name = movie });
+                }
+
+                await WriteFilesAsync(MovieTree, logFile);
+                context.SaveChanges();
+                }
         }
-        private async static void ParseAndDumpComics(string logFile, params string[] libraries)
+
+        private static async void ParseAndDumpComics(string logFile, params string[] libraries)
         {
             if (!libraries.Where(Directory.Exists).Any())
                 return;
 
             var seriesList = PullCollection(libraries);
-            XElement ComicTree = new XElement("ComicCollection");
-            foreach (var series in seriesList)
+
+            using (var context = new mediaEntities())
             {
-                XElement seriesNode = new XElement("series", new XAttribute("name", series.Key));
-                foreach (var comic in series)
+                var ComicTree = new XElement("ComicCollection");
+
+                foreach (var series in seriesList)
                 {
-                    seriesNode.Add(new XElement("comic", comic.Substring(1 + Math.Max(0, comic.LastIndexOf("\\")))));
+                    if (!context.comic_series.Any(item => item.series_name == series.Key))
+                        context.comic_series.Add(new comic_series { series_name = series.Key });
+
+                    var seriesNode = new XElement("series", new XAttribute("name", series.Key));
+                    foreach (var comic in series)
+                    {
+                        seriesNode.Add(new XElement("comic", comic.Substring(1 + Math.Max(0, comic.LastIndexOf("\\")))));
+                    }
+                    ComicTree.Add(seriesNode);
                 }
-                ComicTree.Add(seriesNode);
+                await WriteFilesAsync(ComicTree, logFile);
+                context.SaveChanges();
             }
-            await WriteFilesAsync(ComicTree, logFile);
         }
 
         private async static void ParseAndDumpTV(string logFile, params string[] tvShows)
@@ -62,36 +81,49 @@ namespace LogCollections
                 return;
 
             var seasons = PullCollection(tvShows);
-            XElement TVTree = new XElement("TVCollection");
-            foreach (var season in seasons)
+            using (var context = new mediaEntities())
             {
-                XElement seasonNode = new XElement("season", new XAttribute("name", season.Key));
-                foreach (var episode in season)
+                var TVTree = new XElement("TVCollection");
+                foreach (var season in seasons)
                 {
-                    seasonNode.Add(new XElement("episode", episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
+                    XElement seasonNode = new XElement("season", new XAttribute("name", season.Key));
+                    foreach (var episode in season)
+                    {
+                        seasonNode.Add(new XElement("episode",
+                            episode.Substring(1 + Math.Max(0, episode.LastIndexOf("\\")))));
+                    }
+                    TVTree.Add(seasonNode);
                 }
-                TVTree.Add(seasonNode);
+                await WriteFilesAsync(TVTree, logFile);
+                context.SaveChanges();
             }
-            await WriteFilesAsync(TVTree, logFile);
         }
 
-        async private static void ParseAndDumpPorn(string logFile, params string[] pornStash)
+        private static async void ParseAndDumpPorn(string logFile, params string[] pornStash)
         {
             if (!pornStash.Where(Directory.Exists).Any())
                 return;
 
             var movies = PullCollection(pornStash);
-            XElement MediaTree = new XElement("filecabinet");
-            foreach (var category in movies)
+            using (var context = new mediaEntities())
             {
-                XElement fileNode = new XElement("category", new XAttribute("name", category.Key));
-                foreach (var episode in category)
+                var MediaTree = new XElement("filecabinet");
+                foreach (var category in movies)
                 {
-                    fileNode.Add(new XElement("movie", episode.Substring(Math.Max(0, 1 + episode.LastIndexOf("\\")))));
+
+                    XElement fileNode = new XElement("category", new XAttribute("name", category.Key));
+                    foreach (var episode in category)
+                    {
+                        if (!context.porn.Any(item => item.video_name == episode))
+                            context.porn.Add(new porn { video_name = episode });
+
+                        fileNode.Add(new XElement("movie", episode.Substring(Math.Max(0, 1 + episode.LastIndexOf("\\")))));
+                    }
+                    MediaTree.Add(fileNode);
                 }
-                MediaTree.Add(fileNode);
+                await WriteFilesAsync(MediaTree, logFile);
+                context.SaveChanges();
             }
-            await WriteFilesAsync(MediaTree, logFile);
         }
 
         async private static void ParseAndDumpMusicCollection(string logFile, params string[] directories)

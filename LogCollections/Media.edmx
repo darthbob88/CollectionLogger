@@ -1,0 +1,289 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="mediaModel.Store" Provider="System.Data.SQLite.EF6" ProviderManifestToken="data source=C:\Users\Raymond\OneDrive\Documents\media.sqlite" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="album">
+          <Key>
+            <PropertyRef Name="album_ID" />
+          </Key>
+          <Property Name="artist_ID" Type="integer" Nullable="false" />
+          <Property Name="album_ID" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="album_title" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+        </EntityType>
+        <EntityType Name="artist">
+          <Key>
+            <PropertyRef Name="artist_ID" />
+          </Key>
+          <Property Name="artist_ID" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="artist_name" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+        </EntityType>
+        <EntityType Name="comic_series">
+          <Key>
+            <PropertyRef Name="series_ID" />
+          </Key>
+          <Property Name="series_ID" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="series_name" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+        </EntityType>
+        <EntityType Name="movies">
+          <Key>
+            <PropertyRef Name="movie_ID" />
+          </Key>
+          <Property Name="movie_name" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+          <Property Name="movie_ID" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+        </EntityType>
+        <EntityType Name="porn">
+          <Key>
+            <PropertyRef Name="video_id" />
+          </Key>
+          <Property Name="video_name" Type="nvarchar" MaxLength="2147483647" />
+          <Property Name="video_id" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+        </EntityType>
+        <EntityType Name="tv_episodes">
+          <Key>
+            <PropertyRef Name="show_id" />
+            <PropertyRef Name="episode_ID" />
+          </Key>
+          <Property Name="show_id" Type="integer" Nullable="false" />
+          <Property Name="episode_ID" Type="integer" Nullable="false" />
+          <Property Name="episode_name" Type="nvarchar" MaxLength="2147483647" />
+        </EntityType>
+        <EntityType Name="tv_shows">
+          <Key>
+            <PropertyRef Name="show_ID" />
+          </Key>
+          <Property Name="show_ID" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="show_name" Type="nvarchar" MaxLength="2147483647" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_album_0_0">
+          <End Role="artist" Type="Self.artist" Multiplicity="1" />
+          <End Role="album" Type="Self.album" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="artist">
+              <PropertyRef Name="artist_ID" />
+            </Principal>
+            <Dependent Role="album">
+              <PropertyRef Name="artist_ID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tv_episodes_0_0">
+          <End Role="tv_shows" Type="Self.tv_shows" Multiplicity="1" />
+          <End Role="tv_episodes" Type="Self.tv_episodes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tv_shows">
+              <PropertyRef Name="show_ID" />
+            </Principal>
+            <Dependent Role="tv_episodes">
+              <PropertyRef Name="show_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="mediaModelStoreContainer">
+          <EntitySet Name="album" EntityType="Self.album" store:Type="Tables" />
+          <EntitySet Name="artist" EntityType="Self.artist" store:Type="Tables" />
+          <EntitySet Name="comic_series" EntityType="Self.comic_series" store:Type="Tables" />
+          <EntitySet Name="movies" EntityType="Self.movies" store:Type="Tables" />
+          <EntitySet Name="porn" EntityType="Self.porn" store:Type="Tables" />
+          <EntitySet Name="tv_episodes" EntityType="Self.tv_episodes" store:Type="Tables" />
+          <EntitySet Name="tv_shows" EntityType="Self.tv_shows" store:Type="Tables" />
+          <AssociationSet Name="FK_album_0_0" Association="Self.FK_album_0_0">
+            <End Role="artist" EntitySet="artist" />
+            <End Role="album" EntitySet="album" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tv_episodes_0_0" Association="Self.FK_tv_episodes_0_0">
+            <End Role="tv_shows" EntitySet="tv_shows" />
+            <End Role="tv_episodes" EntitySet="tv_episodes" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="mediaModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="porn">
+          <Key>
+            <PropertyRef Name="video_id" />
+          </Key>
+          <Property Name="video_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="video_id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+        </EntityType>
+        <EntityType Name="tv_episodes">
+          <Key>
+            <PropertyRef Name="show_id" />
+            <PropertyRef Name="episode_ID" />
+          </Key>
+          <Property Name="show_id" Type="Int64" Nullable="false" />
+          <Property Name="episode_ID" Type="Int64" Nullable="false" />
+          <Property Name="episode_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="tv_shows" Relationship="Self.FK_tv_episodes_0_0" FromRole="tv_episodes" ToRole="tv_shows" />
+        </EntityType>
+        <EntityType Name="tv_shows">
+          <Key>
+            <PropertyRef Name="show_ID" />
+          </Key>
+          <Property Name="show_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="show_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="tv_episodes" Relationship="Self.FK_tv_episodes_0_0" FromRole="tv_shows" ToRole="tv_episodes" />
+        </EntityType>
+        <Association Name="FK_tv_episodes_0_0">
+          <End Role="tv_shows" Type="Self.tv_shows" Multiplicity="1" />
+          <End Role="tv_episodes" Type="Self.tv_episodes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tv_shows">
+              <PropertyRef Name="show_ID" />
+            </Principal>
+            <Dependent Role="tv_episodes">
+              <PropertyRef Name="show_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="mediaEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="porn" EntityType="Self.porn" />
+          <EntitySet Name="tv_episodes" EntityType="Self.tv_episodes" />
+          <EntitySet Name="tv_shows" EntityType="Self.tv_shows" />
+          <AssociationSet Name="FK_tv_episodes_0_0" Association="Self.FK_tv_episodes_0_0">
+            <End Role="tv_shows" EntitySet="tv_shows" />
+            <End Role="tv_episodes" EntitySet="tv_episodes" />
+          </AssociationSet>
+          <EntitySet Name="artist" EntityType="mediaModel.artist" />
+          <EntitySet Name="comic_series" EntityType="mediaModel.comic_series" />
+          <EntitySet Name="album" EntityType="mediaModel.album" />
+          <AssociationSet Name="FK_album_0_0" Association="mediaModel.FK_album_0_0">
+            <End Role="artist" EntitySet="artist" />
+            <End Role="album" EntitySet="album" />
+          </AssociationSet>
+          <EntitySet Name="movies" EntityType="mediaModel.movies" />
+        </EntityContainer>
+        <EntityType Name="artist">
+          <Key>
+            <PropertyRef Name="artist_ID" />
+          </Key>
+          <Property Name="artist_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="artist_name" Type="String" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="album" Relationship="mediaModel.FK_album_0_0" FromRole="artist" ToRole="album" />
+        </EntityType>
+        <EntityType Name="comic_series">
+          <Key>
+            <PropertyRef Name="series_ID" />
+          </Key>
+          <Property Name="series_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="series_name" Type="String" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="album">
+          <Key>
+            <PropertyRef Name="album_ID" />
+          </Key>
+          <Property Name="artist_ID" Type="Int64" Nullable="false" />
+          <Property Name="album_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="album_title" Type="String" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="artist" Relationship="mediaModel.FK_album_0_0" FromRole="album" ToRole="artist" />
+        </EntityType>
+        <Association Name="FK_album_0_0">
+          <End Type="mediaModel.artist" Role="artist" Multiplicity="1" />
+          <End Type="mediaModel.album" Role="album" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="artist">
+              <PropertyRef Name="artist_ID" />
+            </Principal>
+            <Dependent Role="album">
+              <PropertyRef Name="artist_ID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="movies">
+          <Key>
+            <PropertyRef Name="movie_ID" />
+          </Key>
+          <Property Name="movie_name" Type="String" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <Property Name="movie_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="mediaModelStoreContainer" CdmEntityContainer="mediaEntities">
+          <EntitySetMapping Name="porn">
+            <EntityTypeMapping TypeName="mediaModel.porn">
+              <MappingFragment StoreEntitySet="porn">
+                <ScalarProperty Name="video_name" ColumnName="video_name" />
+                <ScalarProperty Name="video_id" ColumnName="video_id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tv_episodes">
+            <EntityTypeMapping TypeName="mediaModel.tv_episodes">
+              <MappingFragment StoreEntitySet="tv_episodes">
+                <ScalarProperty Name="show_id" ColumnName="show_id" />
+                <ScalarProperty Name="episode_ID" ColumnName="episode_ID" />
+                <ScalarProperty Name="episode_name" ColumnName="episode_name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tv_shows">
+            <EntityTypeMapping TypeName="mediaModel.tv_shows">
+              <MappingFragment StoreEntitySet="tv_shows">
+                <ScalarProperty Name="show_ID" ColumnName="show_ID" />
+                <ScalarProperty Name="show_name" ColumnName="show_name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="artist">
+            <EntityTypeMapping TypeName="mediaModel.artist">
+              <MappingFragment StoreEntitySet="artist">
+                <ScalarProperty Name="artist_name" ColumnName="artist_name" />
+                <ScalarProperty Name="artist_ID" ColumnName="artist_ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="comic_series">
+            <EntityTypeMapping TypeName="mediaModel.comic_series">
+              <MappingFragment StoreEntitySet="comic_series">
+                <ScalarProperty Name="series_name" ColumnName="series_name" />
+                <ScalarProperty Name="series_ID" ColumnName="series_ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="album">
+            <EntityTypeMapping TypeName="mediaModel.album">
+              <MappingFragment StoreEntitySet="album">
+                <ScalarProperty Name="album_title" ColumnName="album_title" />
+                <ScalarProperty Name="album_ID" ColumnName="album_ID" />
+                <ScalarProperty Name="artist_ID" ColumnName="artist_ID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="movies">
+            <EntityTypeMapping TypeName="mediaModel.movies">
+              <MappingFragment StoreEntitySet="movies">
+                <ScalarProperty Name="movie_ID" ColumnName="movie_ID" />
+                <ScalarProperty Name="movie_name" ColumnName="movie_name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
