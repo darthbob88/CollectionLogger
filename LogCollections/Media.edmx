@@ -43,11 +43,10 @@
         </EntityType>
         <EntityType Name="tv_episodes">
           <Key>
-            <PropertyRef Name="show_id" />
             <PropertyRef Name="episode_ID" />
           </Key>
           <Property Name="show_id" Type="integer" Nullable="false" />
-          <Property Name="episode_ID" Type="integer" Nullable="false" />
+          <Property Name="episode_ID" Type="integer" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="episode_name" Type="nvarchar" MaxLength="2147483647" />
         </EntityType>
         <EntityType Name="tv_shows">
@@ -109,44 +108,17 @@
           <Property Name="video_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <Property Name="video_id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
         </EntityType>
-        <EntityType Name="tv_episodes">
-          <Key>
-            <PropertyRef Name="show_id" />
-            <PropertyRef Name="episode_ID" />
-          </Key>
-          <Property Name="show_id" Type="Int64" Nullable="false" />
-          <Property Name="episode_ID" Type="Int64" Nullable="false" />
-          <Property Name="episode_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="tv_shows" Relationship="Self.FK_tv_episodes_0_0" FromRole="tv_episodes" ToRole="tv_shows" />
-        </EntityType>
         <EntityType Name="tv_shows">
           <Key>
             <PropertyRef Name="show_ID" />
           </Key>
           <Property Name="show_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="show_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" Nullable="false" />
-          <NavigationProperty Name="tv_episodes" Relationship="Self.FK_tv_episodes_0_0" FromRole="tv_shows" ToRole="tv_episodes" />
+          <NavigationProperty Name="tv_episodes" Relationship="mediaModel.FK_tv_episodes_0_0" FromRole="tv_shows" ToRole="tv_episodes" />
         </EntityType>
-        <Association Name="FK_tv_episodes_0_0">
-          <End Role="tv_shows" Type="Self.tv_shows" Multiplicity="1" />
-          <End Role="tv_episodes" Type="Self.tv_episodes" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="tv_shows">
-              <PropertyRef Name="show_ID" />
-            </Principal>
-            <Dependent Role="tv_episodes">
-              <PropertyRef Name="show_id" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityContainer Name="mediaEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="porn" EntityType="Self.porn" />
-          <EntitySet Name="tv_episodes" EntityType="Self.tv_episodes" />
           <EntitySet Name="tv_shows" EntityType="Self.tv_shows" />
-          <AssociationSet Name="FK_tv_episodes_0_0" Association="Self.FK_tv_episodes_0_0">
-            <End Role="tv_shows" EntitySet="tv_shows" />
-            <End Role="tv_episodes" EntitySet="tv_episodes" />
-          </AssociationSet>
           <EntitySet Name="artist" EntityType="mediaModel.artist" />
           <EntitySet Name="comic_series" EntityType="mediaModel.comic_series" />
           <EntitySet Name="album" EntityType="mediaModel.album" />
@@ -155,6 +127,11 @@
             <End Role="album" EntitySet="album" />
           </AssociationSet>
           <EntitySet Name="movies" EntityType="mediaModel.movies" />
+          <EntitySet Name="tv_episodes" EntityType="mediaModel.tv_episodes" />
+          <AssociationSet Name="FK_tv_episodes_0_0" Association="mediaModel.FK_tv_episodes_0_0">
+            <End Role="tv_shows" EntitySet="tv_shows" />
+            <End Role="tv_episodes" EntitySet="tv_episodes" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="artist">
           <Key>
@@ -199,6 +176,27 @@
           <Property Name="movie_name" Type="String" Nullable="false" MaxLength="2147483647" FixedLength="false" Unicode="true" />
           <Property Name="movie_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
         </EntityType>
+        <EntityType Name="tv_episodes">
+          <Key>
+            <PropertyRef Name="episode_ID" />
+          </Key>
+          <Property Name="show_id" Type="Int64" Nullable="false" />
+          <Property Name="episode_ID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="episode_name" Type="String" MaxLength="2147483647" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="tv_shows" Relationship="mediaModel.FK_tv_episodes_0_0" FromRole="tv_episodes" ToRole="tv_shows" />
+        </EntityType>
+        <Association Name="FK_tv_episodes_0_0">
+          <End Type="mediaModel.tv_shows" Role="tv_shows" Multiplicity="1" />
+          <End Type="mediaModel.tv_episodes" Role="tv_episodes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tv_shows">
+              <PropertyRef Name="show_ID" />
+            </Principal>
+            <Dependent Role="tv_episodes">
+              <PropertyRef Name="show_id" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -210,15 +208,6 @@
               <MappingFragment StoreEntitySet="porn">
                 <ScalarProperty Name="video_name" ColumnName="video_name" />
                 <ScalarProperty Name="video_id" ColumnName="video_id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="tv_episodes">
-            <EntityTypeMapping TypeName="mediaModel.tv_episodes">
-              <MappingFragment StoreEntitySet="tv_episodes">
-                <ScalarProperty Name="show_id" ColumnName="show_id" />
-                <ScalarProperty Name="episode_ID" ColumnName="episode_ID" />
-                <ScalarProperty Name="episode_name" ColumnName="episode_name" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -260,6 +249,15 @@
               <MappingFragment StoreEntitySet="movies">
                 <ScalarProperty Name="movie_ID" ColumnName="movie_ID" />
                 <ScalarProperty Name="movie_name" ColumnName="movie_name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tv_episodes">
+            <EntityTypeMapping TypeName="mediaModel.tv_episodes">
+              <MappingFragment StoreEntitySet="tv_episodes">
+                <ScalarProperty Name="episode_name" ColumnName="episode_name" />
+                <ScalarProperty Name="episode_ID" ColumnName="episode_ID" />
+                <ScalarProperty Name="show_id" ColumnName="show_id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

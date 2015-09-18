@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -10,17 +11,17 @@ namespace LogCollections
     internal class Program
     {
         static private string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        static private string[] TARGETS = new String[] { profile + @"\OneDrive\Documents",
+        static private string[] TARGETS = { profile + @"\OneDrive\Documents",
             profile + @"\Dropbox\Public",
             profile + @"\Google Drive" };
 
         private static void Main()
         {
             ParseAndDumpMovies(@"/movies.xml", @"F:\Movies");
-            ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
-            ParseAndDumpPorn(@"/business_material.xml", profile + @"\Videos", @"F:\Videos");
-            //ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
             ParseAndDumpComics(@"/comics.xml", @"F:\Comics");
+            ParseAndDumpTV(@"/TV.xml", @"F:\TV Shows");
+            ParseAndDumpPorn(@"/business_material.xml", profile + @"\Videos", @"F:\Videos");
+            ParseAndDumpMusicCollection(@"/music.xml", profile + @"\Music", @"F:\Music");
             //Console.ReadLine();
         }
         private async static void ParseAndDumpMovies(string logFile, params string[] libraries)
@@ -52,21 +53,19 @@ namespace LogCollections
             if (!libraries.Where(Directory.Exists).Any())
                 return;
 
-            var seriesList = PullCollection(libraries);
+            var seriesList = PullCollection(libraries).GroupBy(item => item.Split('\\')[0]);
 
             using (var context = new mediaEntities())
             {
                 var ComicTree = new XElement("ComicCollection");
-                var foo = seriesList.GroupBy(item => item.Split('\\')[0]);
                 foreach (var series in seriesList)
-                {//TODO Can we GroupBy .split elements like this? Would be easy way to create any hierarchies we need.
-                    var comicData = series.Split('/');
-                    var comicName = comicData[0];
-                    if (!context.comic_series.Any(item => item.series_name == comicName))
-                        context.comic_series.Add(new comic_series { series_name = comicName });
+                {
+                    if (!context.comic_series.Any(item => item.series_name == series.Key))
+                        context.comic_series.Add(new comic_series { series_name = series.Key });
 
-                    var seriesNode = new XElement("series", new XAttribute("name", comicData[0]));
-                    seriesNode.Add(new XElement("comic", comicData[1]));
+                    var seriesNode = new XElement("series", new XAttribute("name", series.Key));
+                    seriesNode.Add(series.Select(issue =>
+                            new XElement("comic", Regex.Match(issue, "([^\\\\]+)$").Groups[0].Value)));
 
                     ComicTree.Add(seriesNode);
                 }
@@ -80,26 +79,27 @@ namespace LogCollections
             if (!tvShows.Where(Directory.Exists).Any())
                 return;
 
-            var seasons = PullCollection(tvShows);
+            var seasons = PullCollection(tvShows).GroupBy(item => item.Split('\\')[0]);
             using (var context = new mediaEntities())
             {
                 var TVTree = new XElement("TVCollection");
                 foreach (var season in seasons)
                 {
-                    var episodeData = season.Split('\\');
-                    var episodeName = episodeData[0];
-                    XElement seasonNode = new XElement("series", new XAttribute("name", episodeData[0]));
-                    if (!context.tv_shows.Any(item => item.show_name == episodeName))
-                    {
-                        context.tv_shows.Add(new tv_shows {show_name = episodeName});
-                        //context.SaveChanges();
-                    }
-                    context.tv_episodes.Add(new tv_episodes
-                    {
-                        episode_name = episodeData[1],
-                        tv_shows = context.tv_shows.First(item => item.show_name == episodeName)
-                    });
+                    XElement seasonNode = new XElement("series", new XAttribute("name", season.Key));
+                    var currentShow = context.tv_shows.Any(item => item.show_name == season.Key) ?
+                        context.tv_shows.First(item => item.show_name == season.Key)
+                        : context.tv_shows.Add(new tv_shows { show_name = season.Key });
 
+                    foreach (var title in season.Select(episode => Regex.Match(episode, "([^\\\\]+)$").Groups[0].Value))
+                    {
+                        seasonNode.Add(new XElement("episode", title));
+                        if (currentShow.tv_episodes.All(item => item.episode_name != title))
+                            currentShow.tv_episodes.Add(new tv_episodes
+                            {
+                                episode_name = title,
+                                tv_shows = currentShow
+                            });
+                    }
                     TVTree.Add(seasonNode);
                 }
                 await WriteFilesAsync(TVTree, logFile);
@@ -115,42 +115,51 @@ namespace LogCollections
             var movies = PullCollection(pornStash);
             using (var context = new mediaEntities())
             {
-                //var MediaTree = new XElement("filecabinet");
+                var MediaTree = new XElement("filecabinet");
                 foreach (var videoName in movies)
                 {
-                    ////XElement fileNode = new XElement("category", new XAttribute("name", videoData[0]));
                     if (!context.porn.Any(item => item.video_name == videoName))
                         context.porn.Add(new porn { video_name = videoName });
 
-                    //fileNode.Add(new XElement("movie", videoData[1]));
-                    //MediaTree.Add(fileNode);
+                    //TODO Find some way of adding categories.
+                    MediaTree.Add(new XElement("movie", videoName));
                 }
-                //await WriteFilesAsync(MediaTree, logFile);
+                await WriteFilesAsync(MediaTree, logFile);
                 context.SaveChanges();
             }
         }
 
         async private static void ParseAndDumpMusicCollection(string logFile, params string[] directories)
         {
-            //if (!directories.Where(Directory.Exists).Any())
-            //    return;
-            //XElement MusicTree = new XElement("MusicCollection");
-            //foreach (var album in PullCollection(directories))
-            //{
-            //    XElement seasonNode = new XElement("album", new XAttribute("name", album.Key));
-            //    foreach (var song in album)
-            //    {
-            //        if (song.EndsWith(".mp3"))
-            //        {
-            //            seasonNode.Add(new XElement("song", song.Substring(1 + Math.Max(0, song.LastIndexOf("\\")))));
-            //        }
-            //    }
-            //    if (!seasonNode.IsEmpty)
-            //    {
-            //        MusicTree.Add(seasonNode);
-            //    }
-            //}
-            //await WriteFilesAsync(MusicTree, logFile);
+            if (!directories.Where(Directory.Exists).Any())
+                return;
+            var musicList = PullCollection(directories).Where(item => item.EndsWith(".mp3")).Select(item => item.Split('\\')).GroupBy(item => item[0]);
+            using (var context = new mediaEntities())
+            {
+                XElement MusicTree = new XElement("MusicCollection");
+                foreach (var artist in musicList)
+                {
+                    var currentArtist = context.artist.Any(item => item.artist_name == artist.Key) ?
+                        context.artist.First(item => item.artist_name == artist.Key) :
+                            context.artist.Add(new artist { artist_name = artist.Key });
+
+                    XElement artistNode = new XElement("artist", new XAttribute("name", artist.Key));
+
+                    var albumList = artist.GroupBy(item => item[1]);
+                    foreach (var album in albumList)
+                    {
+                        if (currentArtist.album.All(item => item.album_title != album.Key))
+                            currentArtist.album.Add(new album { album_title = album.Key });
+
+                        var albumNode = new XElement("album", new XAttribute("name", album.Key));
+                        albumNode.Add(album.Select(song => new XElement("track", song[2])));
+                        artistNode.Add(albumNode);
+                    }
+                    MusicTree.Add(artistNode);
+                }
+                context.SaveChanges();
+                await WriteFilesAsync(MusicTree, logFile);
+            }
         }
 
         private static IEnumerable<string> PullCollection(params string[] collections)
@@ -158,10 +167,10 @@ namespace LogCollections
             return collections.Where(Directory.Exists).Select(
                         directory =>
                             Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
-                                .Where(
-                                    episode =>
+                                .Where(episode =>
                                         !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") ||
-                                          episode.EndsWith(".ini")))
+                                          episode.EndsWith(".ini"))
+                                          )
                                 .Select(episode => episode.Replace(directory + "\\", "")))
                                 .SelectMany(seasonList => seasonList)
                                 .Distinct();

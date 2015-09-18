@@ -26,11 +26,11 @@ namespace LogCollections
         }
     
         public virtual DbSet<porn> porn { get; set; }
-        public virtual DbSet<tv_episodes> tv_episodes { get; set; }
         public virtual DbSet<tv_shows> tv_shows { get; set; }
         public virtual DbSet<artist> artist { get; set; }
         public virtual DbSet<comic_series> comic_series { get; set; }
         public virtual DbSet<album> album { get; set; }
         public virtual DbSet<movies> movies { get; set; }
+        public virtual DbSet<tv_episodes> tv_episodes { get; set; }
     }
 }
