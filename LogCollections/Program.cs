@@ -9,8 +9,8 @@ namespace LogCollections
 {
     internal class Program
     {
-        static private string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        static private string[] TARGETS = new String[] { profile + @"\OneDrive\Documents",
+        static private readonly string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        static private readonly string[] TARGETS = { profile + @"\OneDrive\Documents",
             profile + @"\Dropbox\Public",
             profile + @"\Google Drive" };
 
@@ -120,11 +120,15 @@ namespace LogCollections
         private static IEnumerable<IGrouping<string, string>> PullCollection(params string[] collections)
         {
             return collections.Where(Directory.Exists).Select(
-                                       directory =>
-                                       Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
-                                       .Where(episode => !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini")))
-                                    .Select(episode => episode.Replace(directory + "\\", ""))).SelectMany(seasonList => seasonList)
-                                    .Distinct().GroupBy(episode => episode.Remove(Math.Max(0, episode.LastIndexOf("\\"))));
+                        directory =>
+                            Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
+                                .Where(episode =>
+                                        !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini"))
+                                        || episode.EndsWith(".nfo") || episode.EndsWith(".tbn") || episode.EndsWith(".jpg"))
+                                .Select(episode => episode.Replace(directory + "\\", "")))
+                                .SelectMany(seasonList => seasonList)
+                                .Distinct();
+
         }
         public async static Task WriteFilesAsync(XElement data, string file)
         {
