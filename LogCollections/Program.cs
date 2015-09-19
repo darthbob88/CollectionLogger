@@ -10,8 +10,8 @@ namespace LogCollections
 {
     internal class Program
     {
-        static private string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        static private string[] TARGETS = { profile + @"\OneDrive\Documents",
+        static private readonly string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        static private readonly string[] TARGETS = { profile + @"\OneDrive\Documents",
             profile + @"\Dropbox\Public",
             profile + @"\Google Drive" };
 
@@ -168,9 +168,8 @@ namespace LogCollections
                         directory =>
                             Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories)
                                 .Where(episode =>
-                                        !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") ||
-                                          episode.EndsWith(".ini"))
-                                          )
+                                        !(episode.EndsWith(".db") || episode.EndsWith(".txt") || episode.EndsWith(".srt") || episode.EndsWith(".ini"))
+                                        || episode.EndsWith(".nfo") || episode.EndsWith(".tbn") || episode.EndsWith(".jpg"))
                                 .Select(episode => episode.Replace(directory + "\\", "")))
                                 .SelectMany(seasonList => seasonList)
                                 .Distinct();
