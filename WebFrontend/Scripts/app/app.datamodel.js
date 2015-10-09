@@ -3,7 +3,7 @@
     // Routes
     self.userInfoUrl = "/api/Me";
     self.siteUrl = "/";
-
+    self.getAlbumsUrl = "api/albums";
     // Route operations
 
     // Other private operations
@@ -20,5 +20,8 @@
 
     self.getAccessToken = function () {
         return sessionStorage.getItem("accessToken");
+    };
+    self.getAlbums = function () {
+        return jQuery.getJSON(self.getAlbumsUrl);
     };
 }

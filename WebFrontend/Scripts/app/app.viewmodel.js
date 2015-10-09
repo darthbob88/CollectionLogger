@@ -69,7 +69,12 @@
 
     self.initialize = function () {
         Sammy().run();
+        dataModel.getAlbums().success(function (data) {
+            self.albums(data.$values);
+        });
     }
+
+    self.albums = ko.observableArray();
 }
 
 var app = new AppViewModel(new AppDataModel());

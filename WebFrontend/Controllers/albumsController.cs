@@ -20,14 +20,14 @@ namespace WebFrontend.Controllers
         public IQueryable<album> Getalbums()
         {//Needed to avoid issues with unserializable proxy objects.
             db.Configuration.ProxyCreationEnabled = false;
-            return db.albums.Include(item => item.artist);
+            return db.album.Include(item => item.artist);
         }
 
         // GET: api/albums/5
         [ResponseType(typeof(album))]
         public IHttpActionResult Getalbum(long id)
         {
-            album album = db.albums.Find(id);
+            album album = db.album.Find(id);
             if (album == null)
             {
                 return NotFound();
@@ -80,7 +80,7 @@ namespace WebFrontend.Controllers
                 return BadRequest(ModelState);
             }
 
-            db.albums.Add(album);
+            db.album.Add(album);
             db.SaveChanges();
 
             return CreatedAtRoute("DefaultApi", new { id = album.album_ID }, album);
@@ -90,13 +90,13 @@ namespace WebFrontend.Controllers
         [ResponseType(typeof(album))]
         public IHttpActionResult Deletealbum(long id)
         {
-            album album = db.albums.Find(id);
+            album album = db.album.Find(id);
             if (album == null)
             {
                 return NotFound();
             }
 
-            db.albums.Remove(album);
+            db.album.Remove(album);
             db.SaveChanges();
 
             return Ok(album);
@@ -113,7 +113,7 @@ namespace WebFrontend.Controllers
 
         private bool albumExists(long id)
         {
-            return db.albums.Count(e => e.album_ID == id) > 0;
+            return db.album.Count(e => e.album_ID == id) > 0;
         }
     }
 }
