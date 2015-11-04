@@ -23,6 +23,9 @@
         return self.view() === self.Views.Loading;
     });
 
+    //Used to autogenerate list of possible actions.
+    self.ViewList = ko.observableArray();
+
     // UI operations
 
     // Other navigateToX functions are added dynamically by app.addViewModel(...).
@@ -52,6 +55,9 @@
                 }
             }
 
+            if (self.view() !== viewItem) {
+                return null;
+            }
             return self.Views[options.name];
         });
 
@@ -65,16 +71,14 @@
 
         // Add navigation member to AppViewModel (for example, app.NavigateToHome());
         self["navigateTo" + options.name] = navigator;
+
+        self.ViewList.push({ "name": options.name, "link": "#" + options.bindingMemberName, "navigate": "app.navigateTo" + options.name })
     };
 
     self.initialize = function () {
         Sammy().run();
-        dataModel.getAlbums().success(function (data) {
-            self.albums(data.$values);
-        });
     }
 
-    self.albums = ko.observableArray();
 }
 
 var app = new AppViewModel(new AppDataModel());

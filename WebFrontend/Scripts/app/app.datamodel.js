@@ -4,6 +4,8 @@
     self.userInfoUrl = "/api/Me";
     self.siteUrl = "/";
     self.getAlbumsUrl = "api/albums";
+    self.getArtistsUrl = "api/artists";
+    self.getMoviesUrl = "api/movies";
     // Route operations
 
     // Other private operations
@@ -23,5 +25,13 @@
     };
     self.getAlbums = function () {
         return jQuery.getJSON(self.getAlbumsUrl);
+    };
+    self.getArtists = function () {
+        return jQuery.getJSON(self.getArtistsUrl);
+    }; self.getArtistDetails = function (id) {
+        return jQuery.getJSON(self.getArtistsUrl + "/" + id);
+    };
+    self.getMovies = function () {
+        return jQuery.getJSON(self.getMoviesUrl);
     };
 }

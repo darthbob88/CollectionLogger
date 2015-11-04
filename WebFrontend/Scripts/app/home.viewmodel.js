@@ -17,6 +17,7 @@
                     self.myHometown('Your Hometown is : ' + data.hometown);
                 }
             });
+            app.view(self);  //this line is added
         });
         this.get('/', function () { this.app.runRoute('get', '#home') });
     });
