@@ -1,7 +1,7 @@
 CollectionLogger
 ================
 
-Dumps descriptions of my music/TV/porn collections to files in the cloud, so I can rebuild them in case of emergency. Music and TV are compacted based on album and season, respectively, while other videos get dumped as is.
+Dumps descriptions of my music/TV/comic/etc collections to files in the cloud, so I can rebuild them in case of emergency. Music and TV are compacted based on album and season, respectively, while other videos get dumped as is.
 
 Just a toy project, so I could learn some interesting new things in C#. LINQ, IEnumerables, some functional programming.
 
